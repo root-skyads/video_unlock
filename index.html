@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Photo Unlock</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: #0a0a0f;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        overflow: hidden;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 420px;
+        padding: 20px;
+        position: relative;
+      }
+
+      .photo-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .photo-frame {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
+        background: linear-gradient(145deg, #1a1a2e, #16213e);
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .photo-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: blur(30px) brightness(0.4);
+        transition:
+          filter 0.5s ease,
+          transform 0.5s ease;
+        pointer-events: none;
+      }
+
+      .photo-frame .lock-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.3);
+        transition: opacity 0.4s ease;
+      }
+
+      .hand-pointer {
+        position: absolute;
+        top: 70%;
+        right: 45%;
+        font-size: 45px;
+        animation: pointBounce 1.4s ease-in-out infinite;
+        filter: drop-shadow(0 4px 12px rgba(255, 255, 255, 0.25));
+        z-index: 5;
+        opacity: 0;
+        animation:
+          pointBounce 1.4s ease-in-out infinite,
+          fadeInHand 0.6s ease 0.5s forwards;
+        pointer-events: none;
+        transform-origin: center;
+      }
+
+      .hand-pointer .ripple {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 70px;
+        height: 70px;
+        margin: -35px 0 0 -35px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        animation: rippleRing 1.8s ease-out infinite;
+        pointer-events: none;
+      }
+
+      @keyframes pointBounce {
+        0%,
+        100% {
+          transform: translateY(0) rotate(-10deg);
+        }
+        25% {
+          transform: translateY(-8px) rotate(-5deg);
+        }
+        50% {
+          transform: translateY(0) rotate(-10deg);
+        }
+        75% {
+          transform: translateY(-5px) rotate(-5deg);
+        }
+      }
+
+      @keyframes fadeInHand {
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes rippleRing {
+        0% {
+          transform: scale(0.5);
+          opacity: 0.6;
+        }
+        100% {
+          transform: scale(1.4);
+          opacity: 0;
+        }
+      }
+
+      .lock-overlay .lock-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        margin-bottom: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.15);
+      }
+
+      .lock-overlay .tap-text {
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        opacity: 0.9;
+      }
+
+      .lock-overlay .tap-sub {
+        font-size: 0.85rem;
+        opacity: 0.5;
+        margin-top: 6px;
+      }
+
+      .photo-info {
+        margin-top: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .photo-info .avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f093fb, #f5576c);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+      }
+
+      .photo-info .details {
+        flex: 1;
+      }
+
+      .photo-info .details .name {
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+
+      .photo-info .details .sub {
+        font-size: 0.8rem;
+        opacity: 0.5;
+        margin-top: 2px;
+      }
+
+      .photo-info .likes {
+        text-align: right;
+        font-size: 0.8rem;
+        opacity: 0.5;
+      }
+
+      /* OOPS Popup */
+      .popup-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(6px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+        animation: fadeIn 0.3s ease;
+      }
+
+      .popup-overlay.active {
+        display: flex;
+      }
+
+      .popup {
+        background: rgba(20, 20, 30, 0.95);
+        backdrop-filter: blur(24px);
+        border-radius: 24px;
+        padding: 40px 32px 32px;
+        max-width: 380px;
+        width: 100%;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
+        animation: popUp 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+
+      .popup .oops-icon {
+        font-size: 56px;
+        margin-bottom: 12px;
+        display: block;
+      }
+
+      .popup h2 {
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        margin-bottom: 8px;
+      }
+
+      .popup h2 span {
+        color: #ff4757;
+      }
+
+      .popup .subtitle {
+        font-size: 0.95rem;
+        opacity: 0.6;
+        margin-bottom: 24px;
+        line-height: 1.5;
+      }
+
+      .popup .human-verify {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 14px;
+        padding: 14px 18px;
+        margin-bottom: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        text-align: left;
+      }
+
+      .popup .human-verify .check-icon {
+        font-size: 24px;
+        flex-shrink: 0;
+      }
+
+      .popup .human-verify .check-text {
+        font-size: 0.85rem;
+        opacity: 0.7;
+        line-height: 1.4;
+      }
+
+      .popup .human-verify .check-text strong {
+        color: #4caf50;
+        opacity: 1;
+      }
+
+      .verify-btn {
+        background: linear-gradient(135deg, #4caf50, #45a049);
+        color: #fff;
+        border: none;
+        padding: 16px 32px;
+        width: 100%;
+        font-size: 1.05rem;
+        font-weight: 700;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 24px rgba(76, 175, 80, 0.35);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .verify-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(76, 175, 80, 0.5);
+      }
+
+      .verify-btn:active {
+        transform: translateY(0);
+      }
+
+      .popup .skip-link {
+        display: block;
+        margin-top: 16px;
+        font-size: 0.8rem;
+        opacity: 0.35;
+        cursor: default;
+      }
+
+      .footer {
+        position: fixed;
+        bottom: 20px;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        font-size: 0.8rem;
+        opacity: 0.4;
+      }
+
+      .footer a {
+        color: #ffcc00;
+        text-decoration: underline;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes popUp {
+        0% {
+          transform: scale(0.85);
+          opacity: 0;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .container {
+          padding: 16px;
+        }
+        .photo-card {
+          padding: 16px;
+          border-radius: 20px;
+        }
+        .photo-frame {
+          border-radius: 12px;
+        }
+        .lock-overlay .lock-icon {
+          width: 60px;
+          height: 60px;
+          font-size: 28px;
+        }
+        .popup {
+          padding: 32px 24px 24px;
+        }
+        .popup h2 {
+          font-size: 1.7rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="photo-card">
+        <div class="photo-frame" id="photoFrame">
+          <img
+            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%231a1a2e'/%3E%3Ccircle cx='200' cy='160' r='60' fill='%23ff6b6b' opacity='0.5'/%3E%3Crect x='120' y='260' width='160' height='100' rx='10' fill='%234dabf7' opacity='0.3'/%3E%3C/svg%3E"
+            alt="Photo"
+          />
+          <div class="hand-pointer" id="handPointer">
+            ☝️
+            <div class="ripple"></div>
+          </div>
+          <div class="lock-overlay" id="lockOverlay">
+            <div class="lock-icon">🔒</div>
+            <div class="tap-text">Tap to Reveal video</div>
+            <div class="tap-sub">1 hidden video</div>
+          </div>
+        </div>
+
+        <div class="photo-info">
+          <div class="avatar">D</div>
+          <div class="details">
+            <div class="name">Don Buddy Boss Gifts</div>
+            <div class="sub">Just now · © Exclusive</div>
+          </div>
+          <div class="likes">❤ 4k</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="popup-overlay" id="popupOverlay">
+      <div class="popup">
+        <span class="oops-icon">⚠️</span>
+        <h2>OPPS! <span>!</span></h2>
+        <p class="subtitle">
+          You need to verify your humanity before you can unlock this video.
+        </p>
+
+        <div class="human-verify">
+          <span class="check-icon">🤖</span>
+          <div class="check-text">
+            Confirm you're <strong>human</strong> to prove you're not a bot.
+            This is a one-time check.
+          </div>
+        </div>
+
+        <button class="verify-btn" onclick="verifyHuman()">
+          Verify Humanity
+        </button>
+        <span class="skip-link">Cannot be skipped</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <a
+        href="https://malawiansadsversion3.blogspot.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Privacy Policy</a
+      >
+    </div>
+
+    <script>
+      const photoFrame = document.getElementById("photoFrame");
+      const popupOverlay = document.getElementById("popupOverlay");
+
+      photoFrame.addEventListener("click", function () {
+        document.getElementById("handPointer").style.display = "none";
+        popupOverlay.classList.add("active");
+      });
+
+      function verifyHuman() {
+        window.location.href = "https://skrotrack.com/click/1";
+      }
+    </script>
+  </body>
+</html>
